@@ -1,0 +1,116 @@
+<form>
+  <label>CIM-MethodExecution</label>
+  <fieldset submitButton="false">
+    <input type="dropdown" token="field2">
+      <label>index</label>
+      <choice value="none">-- select index</choice>
+      <fieldForLabel>index</fieldForLabel>
+      <fieldForValue>index</fieldForValue>
+      <search>
+        <query>| eventcount summarize=false index=* |regex index!="(main|history|jmx|summary)" | dedup index | fields index</query>
+        <earliest>0</earliest>
+        <latest></latest>
+      </search>
+      <default>none</default>
+      <initialValue>none</initialValue>
+    </input>
+    <input type="dropdown" token="field3">
+      <label>host</label>
+      <choice value="*">(all)</choice>
+      <fieldForLabel>host</fieldForLabel>
+      <fieldForValue>host</fieldForValue>
+      <search>
+        <query>| metadata type=hosts index=$field2$ |  table host |  sort host</query>
+        <earliest>0</earliest>
+        <latest></latest>
+      </search>
+      <default>*</default>
+    </input>
+    <input type="time" token="field1">
+      <label>time range</label>
+      <default>
+        <earliest>0</earliest>
+        <latest></latest>
+      </default>
+    </input>
+  </fieldset>
+  <row depends="$no_show$">
+    <panel>
+      <html>
+         <style>
+           div[data-view="views/shared/appbar/Master"] {
+             background-color: #5A2A82;
+             }
+            div[data-role="underline"] {
+             background-color:red;
+            }
+         </style>
+       </html>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <chart>
+        <title>methodexecution stats by count, avg,sum duration</title>
+        <search>
+          <query>index=$field2$ host=$field3$ source="*cim.log*" MethodExecutionAdvice 
+| rex field=_raw ".* - Executed: (?&lt;exec&gt;[^\s]+)" 
+| rex field=_raw ".* time\(ms\): (?&lt;durms&gt;\d+\.\d+)" |eval duration_min=durms/1000/60
+| table _time, exec, duration_min 
+| stats count, avg(duration_min), max(duration_min),sum(duration_min) by exec 
+| sort - sum(duration_min)</query>
+          <earliest>$field1.earliest$</earliest>
+          <latest>$field1.latest$</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="charting.axisTitleX.visibility">collapsed</option>
+        <option name="charting.axisTitleY.visibility">collapsed</option>
+        <option name="charting.axisTitleY2.visibility">collapsed</option>
+        <option name="charting.chart">pie</option>
+        <option name="charting.chart.sliceCollapsingThreshold">0</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.legend.placement">none</option>
+        <option name="height">331</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="trellis.enabled">1</option>
+        <option name="trellis.size">medium</option>
+        <option name="trellis.splitBy">_aggregation</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <table>
+        <title>methodexecution stats by duration totals</title>
+        <search>
+          <query>index=$field2$ host=$field3$ source="*cim.log*" MethodExecutionAdvice 
+| rex field=_raw ".* - Executed: (?&lt;exec&gt;[^\s]+)" 
+| rex field=_raw ".* time\(ms\): (?&lt;durms&gt;\d+\.\d+)" |eval duration_min=durms/1000/60
+| table _time, exec, duration_min 
+| stats count, avg(duration_min), max(duration_min), sum(duration_min) by exec 
+| sort - sum(duration_min)</query>
+          <earliest>$field1.earliest$</earliest>
+          <latest>$field1.latest$</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">15</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+        <format type="number" field="avg(duration_min)">
+          <option name="unit">min.</option>
+        </format>
+        <format type="number" field="sum(duration_min)">
+          <option name="unit">min.</option>
+        </format>
+        <format type="number" field="max(duration_min)">
+          <option name="unit">min.</option>
+        </format>
+      </table>
+    </panel>
+  </row>
+</form>

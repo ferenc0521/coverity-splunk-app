@@ -1,0 +1,220 @@
+<form>
+  <label>CIM-Cluster</label>
+  <fieldset submitButton="false" autoRun="false">
+    <input type="dropdown" token="field2">
+      <label>cluster index</label>
+      <fieldForLabel>index</fieldForLabel>
+      <fieldForValue>index</fieldForValue>
+      <search>
+        <query>| eventcount summarize=false index=* |regex index!="(main|history|jmx|summary)" | dedup index | fields index</query>
+        <earliest>0</earliest>
+        <latest></latest>
+      </search>
+      <choice value="">--select index</choice>
+      <default></default>
+    </input>
+    <input type="dropdown" token="field3">
+      <label>coordinator host</label>
+      <choice value="*">(all)</choice>
+      <fieldForLabel>host</fieldForLabel>
+      <fieldForValue>host</fieldForValue>
+      <search>
+        <query>| metadata type=hosts index=$field2$ |  table host |  sort host</query>
+        <earliest>0</earliest>
+        <latest></latest>
+      </search>
+      <default>*</default>
+    </input>
+    <input type="dropdown" token="field4">
+      <label>subscriber host</label>
+      <choice value="*">(all)</choice>
+      <fieldForLabel>host</fieldForLabel>
+      <fieldForValue>host</fieldForValue>
+      <search>
+        <query>| metadata type=hosts index=$field2$ |  table host |  sort host</query>
+        <earliest>0</earliest>
+        <latest></latest>
+      </search>
+      <default>*</default>
+    </input>
+    <input type="time" token="field1">
+      <label>Time Picker</label>
+      <default>
+        <earliest>0</earliest>
+        <latest></latest>
+      </default>
+    </input>
+  </fieldset>
+  <row depends="$no_show$">
+    <panel>
+      <html>
+         <style>
+           div[data-view="views/shared/appbar/Master"] {
+             background-color: #5A2A82;
+             }
+            div[data-role="underline"] {
+             background-color:red;
+            }
+         </style>
+       </html>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>hello received from subscriber(s)</title>
+      <table>
+        <search>
+          <query>index=$field2$ host=$field3$ remotecimid 
+| rex field=message ".*RemoteCim (?&lt;remotecim&gt;.*) via.*" 
+| table _time, remoteCimId,remotecim |dedup remoteCimId,remotecim</query>
+          <earliest>$field1.earliest$</earliest>
+          <latest>$field1.latest$</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">100</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+      </table>
+    </panel>
+    <panel>
+      <title>hello sent from subscriber(s)</title>
+      <table>
+        <search>
+          <query>sourcetype=cimlog4j index=$field2$ host=$field4$ remotecimid sent messagehello
+| rex field=message ".*RemoteCim (?&lt;remotecim&gt;.*) via.*" 
+| table _time, remoteCimId,remotecim  |dedup remoteCimId,remotecim</query>
+          <earliest>$field1.earliest$</earliest>
+          <latest>$field1.latest$</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">20</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>merged_defect accretion_id already exists</title>
+      <table>
+        <search>
+          <query>index=$field2$ host=$field4$ source=*/cim.log* NOT DEBUG "Detail: Key (accretion_id)=(*) already exists." 
+| dedup merge_key 
+| table id, merge_key,display_cid,accretion_id</query>
+          <earliest>0</earliest>
+          <latest></latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">100</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>discrepancies by subscriber and triagestore</title>
+      <table>
+        <search>
+          <query>index=$field2$ host=$field3$ "Something is seriously wrong: remote accretionId is ahead of local accretionId for synchedTriageHistory" 
+| rex field=message ".*remote accretionId is ahead of local accretionId for synchedTriageHistory:(?&lt;triagestore&gt;[^\.]*)\. Local has (?&lt;local_accr_id&gt;\d*);.* \{RemoteCim (?&lt;remote_host&gt;[^\:]+):\[(?&lt;remote_port&gt;\d+)\/\d+\].*\} has (?&lt;remote_accr_id&gt;\d*)." |eval discrepancy=remote_accr_id - local_accr_id
+| table t_stamp,triagestore,local_accr_id,discrepancy, remote_accr_id,remote_host, remote_port, remote_accr_id|stats min(local_accr_id),max(local_accr_id),min(discrepancy),max(discrepancy) by remote_host, triagestore</query>
+          <earliest>$field1.earliest$</earliest>
+          <latest>$field1.latest$</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">25</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Something is seriously wrong: remote accretionId is ahead of local accretionId for synchedTriageHistory</title>
+      <table>
+        <search>
+          <query>index=$field2$ host=$field3$ "Something is seriously wrong: remote accretionId is ahead of local accretionId for synchedTriageHistory" 
+| rex field=message ".*remote accretionId is ahead of local accretionId for synchedTriageHistory:(?&lt;triagestore&gt;[^\.]*)\. Local has (?&lt;local_accr_id&gt;\d*);.* \{RemoteCim (?&lt;remote_host&gt;[^\:]+):\[(?&lt;remote_port&gt;\d+)\/\d+\].*\} has (?&lt;remote_accr_id&gt;\d*)." |eval discrepancy=remote_accr_id - local_accr_id
+| table t_stamp,triagestore,local_accr_id,discrepancy, remote_accr_id,remote_host, remote_port, remote_accr_id</query>
+          <earliest>$field1.earliest$</earliest>
+          <latest>$field1.latest$</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">20</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>max accretion ids by remote triage stores</title>
+      <table>
+        <search>
+          <query>sourcetype=cimlog4j index=$field2$ host=*  "AccretionId for synchedTriageHistory" 
+| rex field=message ".*AccretionId for synchedTriageHistory:(?&lt;triagestore&gt;.*) on \{RemoteCim (?&lt;remotecim&gt;.*) via port \d+\} is (?&lt;accretion_id&gt;\d+)\. Local accretionId is (?&lt;local_accretion_id&gt;\d+).*" |eval remote_triage_store=remotecim+" - "+triagestore |convert  ctime(_time) AS c_time
+| table _time, c_time, remote_triage_store, accretion_id, local_accretion_id |stats max(c_time),max(accretion_id),max(local_accretion_id) by remote_triage_store</query>
+          <earliest>0</earliest>
+          <latest></latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">100</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>triage store syncing by remote cim (subscriber)</title>
+      <table>
+        <search>
+          <query>sourcetype=cimlog4j index=$field2$ host=$field3$ "AccretionId for synchedTriageHistory" 
+| rex field=message ".*AccretionId for synchedTriageHistory:(?&lt;triagestore&gt;.*) on \{RemoteCim (?&lt;remotecim&gt;.*) via port \d+\} is (?&lt;accretion_id&gt;\d+)\. Local accretionId is (?&lt;local_accretion_id&gt;\d+).*"|table _time,remotecim,triagestore,accretion_id,local_accretion_id |sort remotecim,triagestore,accretion_id</query>
+          <earliest>$field1.earliest$</earliest>
+          <latest>$field1.latest$</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">100</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+      </table>
+    </panel>
+  </row>
+</form>

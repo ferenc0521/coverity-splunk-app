@@ -1,0 +1,722 @@
+[app/ui]
+version = 7.1.1
+modtime = 1528827761.207004000
+
+[app/launcher]
+version = 7.1.1
+modtime = 1528827761.210399000
+
+[props/gc.log]
+owner = admin
+version = 7.0.1
+modtime = 1520445456.549835000
+
+[views/cimlogandconfigfiles]
+version = 7.1.1
+modtime = 1558122013.057380000
+
+[views/cimbackgroundprocesses]
+access = read : [ admin, power, user ], write : [ admin, power ]
+export = none
+owner = nobody
+version = 8.0.2
+modtime = 1583590972.261030000
+
+[views/cimcommitstats]
+version = 8.0.2
+modtime = 1583591262.667643000
+
+[views/cimmethodexecution]
+version = 7.1.1
+modtime = 1568651731.427348000
+
+[views/cimperformance_stats]
+version = 7.1.1
+modtime = 1569013734.794510000
+
+[views/cimusagestats]
+version = 8.0.2
+modtime = 1583592330.057464000
+
+[views/cimconfiguration]
+version = 8.0.2
+modtime = 1583592010.848165000
+
+[nav/default]
+version = 7.0.1
+modtime = 1525812812.078453000
+
+[views/cimgclogstatsg1gc]
+access = read : [ * ], write : [ admin, power ]
+export = none
+owner = admin
+version = 7.1.1
+modtime = 1528842067.534050000
+
+[app/package/check_for_updates]
+version = 7.1.1
+modtime = 1528827761.211633000
+
+[views/cimgclogstatsparallel]
+access = read : [ * ], write : [ admin, power ]
+export = none
+owner = admin
+version = 7.1.1
+modtime = 1528842192.698590000
+
+[inputs/splunktcp%3A%2F%2F19997]
+owner = admin
+version = 7.0.1
+modtime = 1526493324.262297000
+
+[props/cimlog4j]
+owner = admin
+version = 7.1.1
+modtime = 1537022586.235609000
+
+[app/install/install_source_checksum]
+version = 8.0.2
+modtime = 1583589131.540564000
+
+[props/cimlog4j/EXTRACT-level%2Cclass%2Cmethod%2Clin%2Cmessage]
+access = read : [ * ], write : [ admin, power ]
+export = system
+owner = admin
+version = 7.1.1
+modtime = 1533940312.415192000
+
+[indexes/121170aptiva]
+owner = admin
+version = 7.1.1
+modtime = 1540060334.662369000
+
+[indexes/613429gehc]
+owner = admin
+version = 7.1.1
+modtime = 1540060262.565734000
+
+[indexes/121243pasa]
+owner = admin
+version = 7.1.1
+modtime = 1540060283.263182000
+
+[indexes/cim-pop]
+owner = admin
+version = 7.1.1
+modtime = 1529959254.283844000
+
+[views/cimpreviewcommitstats]
+access = read : [ * ], write : [ admin ]
+export = none
+owner = admin
+version = 7.1.1
+modtime = 1538688308.182483000
+
+[views/cimsig02_queries]
+access = read : [ * ], write : [ admin ]
+export = none
+owner = admin
+version = 7.1.1
+modtime = 1554767164.957599000
+
+[views/cimpostgres]
+access = read : [ * ], write : [ admin ]
+export = none
+owner = admin
+version = 7.1.1
+modtime = 1536255433.152355000
+
+[indexes/2018-08-24-aptiv-stats]
+owner = admin
+version = 7.1.1
+modtime = 1558115683.888080000
+
+[indexes/0_aptiv_stats]
+owner = adminjp
+version = 7.1.1
+modtime = 1536163627.903542000
+
+[views/cimcluster]
+access = read : [ admin, power, user ], write : [ admin, power ]
+export = none
+owner = admin
+version = 7.1.1
+modtime = 1579126504.408652000
+
+[props/cimlog]
+owner = admin
+version = 7.1.1
+modtime = 1537022180.041143000
+
+[indexes/2018-09-22-visteon-reproducer]
+owner = admin
+version = 7.1.1
+modtime = 1558115705.695783000
+
+[indexes/2018-09-28-aptiv]
+owner = admin
+version = 7.1.1
+modtime = 1558115711.571721000
+
+[props/misra_xml]
+owner = adminsf
+version = 7.1.1
+modtime = 1539541873.434263000
+
+[indexes/2018-10-13-misra]
+owner = adminsf
+version = 7.1.1
+modtime = 1558115724.112419000
+
+[indexes/2018-10-08_648830]
+owner = admin
+version = 7.1.1
+modtime = 1558115719.777895000
+
+[indexes/2018-10-25-agl-misra]
+owner = admin
+version = 7.1.1
+modtime = 1558115740.239680000
+
+[indexes/871]
+version = 7.1.1
+modtime = 1540060232.810807000
+
+[indexes/119459-telstra]
+version = 7.1.1
+modtime = 1540060362.188884000
+
+[indexes/aptiva20180518]
+version = 7.1.1
+modtime = 1540061120.335311000
+
+[indexes/delphi-119134]
+version = 7.1.1
+modtime = 1540061211.784598000
+
+[indexes/bz117960-0507]
+version = 7.1.1
+modtime = 1540061238.017639000
+
+[indexes/telstra-20180510]
+version = 7.1.1
+modtime = 1540061282.852313000
+
+[indexes/telstra-2018-0515]
+version = 7.1.1
+modtime = 1540061320.012537000
+
+[indexes/bz102888]
+version = 7.1.1
+modtime = 1540061395.660235000
+
+[indexes/cim-sig-02]
+version = 7.1.1
+modtime = 1540061574.609072000
+
+[indexes/bz115807-visteon]
+version = 7.1.1
+modtime = 1540061798.514296000
+
+[indexes/bz117960]
+version = 7.1.1
+modtime = 1540061816.795137000
+
+[indexes/cim-satish-off]
+version = 7.1.1
+modtime = 1540061841.619221000
+
+[indexes/cisco-coord]
+version = 7.1.1
+modtime = 1540061874.127340000
+
+[indexes/cisco-coord-2018-05-10]
+version = 7.1.1
+modtime = 1540061889.905371000
+
+[indexes/dan]
+version = 7.1.1
+modtime = 1540061905.340479000
+
+[indexes/dan-yocto]
+version = 7.1.1
+modtime = 1540061913.501852000
+
+[indexes/00-misra-c-12]
+owner = adminsf
+version = 7.1.1
+modtime = 1541623295.689421000
+
+[indexes/00-collect]
+owner = adminsf
+version = 7.1.1
+modtime = 1558115641.511732000
+
+[indexes/2018-10-24_im-23074-xr]
+owner = adminsf
+version = 7.1.1
+modtime = 1540416569.166399000
+
+[indexes/0-misra-standards]
+owner = adminsf
+version = 7.1.1
+modtime = 1558115636.535672000
+
+[indexes/0-misra-reports]
+owner = adminsf
+version = 7.1.1
+modtime = 1558115631.950256000
+
+[indexes/im23234]
+owner = adminsf
+version = 7.1.1
+modtime = 1541552143.964760000
+
+[indexes/testerrors]
+owner = adminsf
+version = 7.1.1
+modtime = 1542636027.554358000
+
+[indexes/im23234-2]
+owner = adminsf
+version = 7.1.1
+modtime = 1543344077.588219000
+
+[views/im232342sync]
+access = read : [ * ], write : [ admin ]
+export = none
+owner = adminsf
+version = 7.1.1
+modtime = 1543410027.012751000
+
+[indexes/hostinfo-curl]
+owner = admin
+version = 7.1.1
+modtime = 1544468451.229069000
+
+[inputs/script%3A%2F%2F%24SPLUNK_HOME%2Fetc%2Fapps%2Fcoverity%2Fbin%2Fhostinfo.sh]
+owner = admin
+version = 7.1.1
+modtime = 1549145486.666110000
+
+[indexes/hello-app]
+owner = admin
+version = 7.1.1
+modtime = 1544537234.088311000
+
+[indexes/hello]
+owner = admin
+version = 7.1.1
+modtime = 1544537298.996229000
+
+[inputs/script%3A%2F%2F%24SPLUNK_HOME%2Fetc%2Fapps%2Fcoverity%2Fbin%2Fhello.sh]
+owner = admin
+version = 7.1.1
+modtime = 1549133668.168476000
+
+[inputs/monitor%3A%2F%2F%2Fslowfs%2Fsig-gss%2FJira%2FCustomer-accounts%2FP-Q-R%2FPASA%2F00700026%2Flogs_12_06.zip]
+owner = molly
+version = 7.1.1
+modtime = 1544566582.590305000
+
+[indexes/pasa2]
+owner = molly
+version = 7.1.1
+modtime = 1544569849.231641000
+
+[props/top_file]
+owner = admin
+version = 7.1.1
+modtime = 1546197192.155076000
+
+[indexes/im-23234-3]
+owner = admin
+version = 7.1.1
+modtime = 1546197261.342677000
+
+[indexes/im-23234-4-metrics]
+owner = admin
+version = 7.1.1
+modtime = 1547079452.159514000
+
+[indexes/im-23306-metrics]
+owner = admin
+version = 7.1.1
+modtime = 1547239403.192432000
+
+[indexes/im-23306-2019-01-06]
+owner = admin
+version = 7.1.1
+modtime = 1547483207.834309000
+
+[indexes/im-23306-metrics-4]
+owner = admin
+version = 7.1.1
+modtime = 1547600092.060700000
+
+[indexes/im-23306-5-metrics]
+owner = admin
+version = 7.1.1
+modtime = 1547602978.478105000
+
+[indexes/garmindbstats2019-01-16]
+owner = admin
+version = 7.1.1
+modtime = 1547672508.817135000
+
+[indexes/garmindb]
+owner = admin
+version = 7.1.1
+modtime = 1547672377.067769000
+
+[indexes/im-23373]
+owner = admin
+version = 7.1.1
+modtime = 1548192124.298017000
+
+[indexes/vivek2019-01-17]
+owner = admin
+version = 7.1.1
+modtime = 1548289026.195642000
+
+[inputs/script%3A%2F%2F%24SPLUNK_HOME%2Fetc%2Fapps%2Fcoverity%2Fbin%2Fnetdata.sh]
+owner = admin
+version = 7.1.1
+modtime = 1549145482.814234000
+
+[indexes/im-23598]
+owner = admin
+version = 7.1.1
+modtime = 1550153084.373218000
+
+[indexes/newman]
+owner = admin
+version = 7.1.1
+modtime = 1550691317.088402000
+
+[props/upgrade_console]
+owner = admin
+version = 7.1.1
+modtime = 1550866579.482254000
+
+[indexes/local_config]
+owner = admin
+version = 7.1.1
+modtime = 1551280457.921890000
+
+[indexes/local_logs]
+owner = admin
+version = 7.1.1
+modtime = 1551280474.422558000
+
+[props/views_json]
+owner = admin
+version = 7.1.1
+modtime = 1551538368.952953000
+
+[indexes/1views]
+owner = admin
+version = 7.1.1
+modtime = 1558115658.818558000
+
+[indexes/im23673]
+owner = admin
+version = 7.1.1
+modtime = 1551829108.389513000
+
+[indexes/hostmetrics]
+owner = admin
+version = 7.1.1
+modtime = 1552002247.037380000
+
+[inputs/tcp%3A%2F%2F5153]
+owner = admin
+version = 7.1.1
+modtime = 1552054880.821210000
+
+[indexes/mbravo]
+owner = admin
+version = 7.1.1
+modtime = 1554315704.834786000
+
+[indexes/20190405patrick]
+owner = admin
+version = 7.1.1
+modtime = 1554503248.620280000
+
+[indexes/im23820]
+owner = admin
+version = 7.1.1
+modtime = 1555349833.671148000
+
+[indexes/im-23763]
+owner = admin
+version = 7.1.1
+modtime = 1557339786.583099000
+
+[indexes/im-23763-1]
+owner = admin
+version = 7.1.1
+modtime = 1557339818.787049000
+
+[indexes/im-23763-11]
+owner = admin
+version = 7.1.1
+modtime = 1557339890.991814000
+
+[props/snapshot_stats.csv]
+owner = admin
+version = 7.1.1
+modtime = 1557960466.307039000
+
+[indexes/735447]
+owner = molly
+version = 7.1.1
+modtime = 1560805414.577776000
+
+[indexes/735906]
+owner = admin
+version = 7.1.1
+modtime = 1561057168.173888000
+
+[indexes/bxb-mitg7-cluster]
+owner = abrewer
+version = 7.1.1
+modtime = 1561742320.773954000
+
+[indexes/20190717]
+owner = admin
+version = 7.1.1
+modtime = 1563398846.511333000
+
+[indexes/00745129_siemans]
+owner = admin
+version = 7.1.1
+modtime = 1564001864.971729000
+
+[indexes/00746193-dell]
+owner = admin
+version = 7.1.1
+modtime = 1564071254.219146000
+
+[indexes/00746193-dell2]
+owner = admin
+version = 7.1.1
+modtime = 1564073190.144288000
+
+[indexes/00741658]
+owner = admin
+version = 7.1.1
+modtime = 1565382656.399636000
+
+[indexes/00751928-ge]
+owner = admin
+version = 7.1.1
+modtime = 1566857346.572862000
+
+[indexes/00752203-ge]
+owner = admin
+version = 7.1.1
+modtime = 1567106420.134538000
+
+[indexes/fe27]
+owner = admin
+version = 7.1.1
+modtime = 1568653390.231460000
+
+[props/soap_xml]
+owner = admin
+version = 7.1.1
+modtime = 1568994458.685464000
+
+[savedsearches/PASA-commit%20fail]
+access = read : [ * ]
+export = none
+owner = admin
+version = 7.1.1
+modtime = 1569023129.880681000
+
+[indexes/758933upgrade]
+owner = admin
+version = 7.1.1
+modtime = 1570541896.517061000
+
+[indexes/758933_upgrade]
+owner = admin
+version = 7.1.1
+modtime = 1570541917.134253000
+
+[views/postgres_statement_stats]
+owner = admin
+version = 7.1.1
+modtime = 1570565566.975726000
+
+[props/postgresql-log]
+owner = admin
+version = 7.1.1
+modtime = 1580248667.071722000
+
+[indexes/00767694-aptiv]
+owner = admin
+version = 7.1.1
+modtime = 1573241011.466019000
+
+[indexes/00771537-aptiv]
+owner = admin
+version = 7.1.1
+modtime = 1574966602.792603000
+
+[indexes/00771537]
+owner = admin
+version = 7.1.1
+modtime = 1574966598.957635000
+
+[indexes/771537]
+owner = admin
+version = 7.1.1
+modtime = 1574968443.814932000
+
+[indexes/770377-test_index]
+owner = amruta
+version = 7.1.1
+modtime = 1575567401.011480000
+
+[props/netdata_prometheus]
+owner = admin
+version = 7.1.1
+modtime = 1575655292.243398000
+
+[props/netdata-prometheus]
+owner = admin
+version = 7.1.1
+modtime = 1575663010.258093000
+
+[indexes/prometheus]
+owner = admin
+version = 7.1.1
+modtime = 1575663042.872969000
+
+[indexes/im24600]
+owner = admin
+version = 7.1.1
+modtime = 1576260749.064610000
+
+[indexes/776793-siemens]
+owner = admin
+version = 7.1.1
+modtime = 1578421838.455933000
+
+[props/netdata_prometheus_fl]
+owner = admin
+version = 7.1.1
+modtime = 1578525967.686641000
+
+[indexes/00__netdata]
+owner = admin
+version = 7.1.1
+modtime = 1578526224.160690000
+
+[indexes/777701-broadcom]
+owner = admin
+version = 7.1.1
+modtime = 1578611292.191151000
+
+[indexes/im-24583-backups]
+owner = flazar
+version = 7.1.1
+modtime = 1579039572.985033000
+
+[views/snapshotstats]
+access = read : [ admin, power, user ], write : [ admin, power ]
+export = none
+owner = admin
+version = 7.1.1
+modtime = 1579126561.520870000
+
+[views/cimsnapshots_analysis]
+access = read : [ admin, power, user ], write : [ admin, power ]
+export = none
+owner = admin
+version = 7.1.1
+modtime = 1579126583.495281000
+
+[views/cim_snapshots_and_streams_analysis]
+access = read : [ admin, power, user ], write : [ admin, power ]
+export = none
+owner = admin
+version = 7.1.1
+modtime = 1579126607.094505000
+
+[views/ehcache]
+access = read : [ admin, power ], write : [ admin ]
+export = none
+owner = admin
+version = 7.1.1
+modtime = 1579126665.889596000
+
+[views/netdata_hostmetrics]
+owner = admin
+version = 7.1.1
+modtime = 1580245614.306871000
+
+[indexes/broadcom_2019_09-4_test]
+owner = alappat
+version = 7.1.1
+modtime = 1579546788.906885000
+
+[indexes/broadcom201909test]
+owner = alappat
+version = 7.1.1
+modtime = 1579547958.416559000
+
+[indexes/broadcom201912test]
+owner = alappat
+version = 7.1.1
+modtime = 1579549213.037205000
+
+[indexes/780096-aptiv]
+owner = amruta
+version = 7.1.1
+modtime = 1579552972.556017000
+
+[views/cim_netdata_host_metrics]
+access = read : [ * ], write : [ admin, power ]
+export = none
+owner = admin
+version = 7.1.1
+modtime = 1580338232.935282000
+
+[indexes/im-24693]
+owner = admin
+version = 7.1.1
+modtime = 1580861902.868661000
+
+[indexes/im24397]
+owner = admin
+version = 7.1.1
+modtime = 1580863815.528500000
+
+[indexes/00784762-ciena-commit]
+owner = molly
+version = 7.1.1
+modtime = 1581379161.645934000
+
+[props/defect_changes_json]
+owner = admin
+version = 7.1.1
+modtime = 1582059841.349263000
+
+[props/triage_changes_json]
+owner = admin
+version = 7.1.1
+modtime = 1582060081.376474000
+
+[props/last_days_snapshots_json]
+owner = admin
+version = 7.1.1
+modtime = 1582062588.155423000
+
+[props/json_no_timestamp1]
+owner = admin
+version = 7.1.1
+modtime = 1582062651.860225000

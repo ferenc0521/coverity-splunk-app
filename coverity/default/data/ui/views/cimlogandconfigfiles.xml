@@ -1,0 +1,140 @@
+<form>
+  <label>CIM-Home</label>
+  <fieldset submitButton="false">
+    <input type="dropdown" token="field1">
+      <label>index</label>
+      <choice value="--select Index">--select index</choice>
+      <fieldForLabel>index</fieldForLabel>
+      <fieldForValue>index</fieldForValue>
+      <search>
+        <query>| eventcount summarize=false index=* |regex index!="(main|history|jmx|summary)" | dedup index | fields index</query>
+        <earliest>0</earliest>
+        <latest></latest>
+      </search>
+      <default>--select Index</default>
+    </input>
+    <input type="dropdown" token="field2">
+      <label>host</label>
+      <choice value="*">(all)</choice>
+      <fieldForLabel>host</fieldForLabel>
+      <fieldForValue>host</fieldForValue>
+      <search>
+        <query>| metadata type=hosts index=$field1$ |  table host |  sort host</query>
+        <earliest>0</earliest>
+        <latest></latest>
+      </search>
+    </input>
+  </fieldset>
+  <row depends="$no_show$">
+    <panel>
+      <html>
+         <style>
+           div[data-view="views/shared/appbar/Master"] {
+             background-color: #5A2A82;
+             }
+            div[data-role="underline"] {
+             background-color:red;
+            }
+          #tableWithHiddenHeader1 thead{
+             visibility: hidden;
+           }
+
+         </style>
+       </html>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Version Info (last 2)</title>
+      <table id="tableWithHiddenHeader1">
+        <search>
+          <query>index=$field1$  host=$field2$   source="*cim.log*" (external OR internal) version: | eval versions=message |table versions |transpose 4</query>
+          <earliest>$earliest$</earliest>
+          <latest>$latest$</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">15</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Indexes</title>
+      <table>
+        <search>
+          <query>| eventcount summarize=false index=* |regex index!="(main|history|jmx|summary)" | dedup index | fields index</query>
+          <earliest>$earliest$</earliest>
+          <latest>$latest$</latest>
+        </search>
+        <option name="count">15</option>
+        <option name="drilldown">cell</option>
+        <drilldown>
+          <eval token="form.field1">$click.value$</eval>
+        </drilldown>
+      </table>
+    </panel>
+    <panel>
+      <title>Hosts</title>
+      <table>
+        <search>
+          <query>| metadata type=hosts index=$field1$
+|  table host 
+|  sort host</query>
+          <earliest>$earliest$</earliest>
+          <latest>$latest$</latest>
+        </search>
+        <option name="count">15</option>
+        <option name="drilldown">cell</option>
+        <option name="refresh.display">progressbar</option>
+        <drilldown>
+          <eval token="form.field2">$click.value$</eval>
+        </drilldown>
+      </table>
+    </panel>
+    <panel>
+      <title>Dashboards</title>
+      <table>
+        <search>
+          <query>| rest /servicesNS/-/-/data/ui/views | search eai:acl.app=coverity |table label,title |sort label</query>
+          <earliest>$earliest$</earliest>
+          <latest>$latest$</latest>
+        </search>
+        <option name="count">15</option>
+        <option name="drilldown">row</option>
+        <drilldown>
+          <link target="_blank">/app/coverity/$row.title$?form.field2=$form.field1$&amp;form.field3=$form.field2$&amp;form.field1=$form.field3$</link>
+        </drilldown>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Files</title>
+      <table>
+        <search>
+          <query>|metadata type=sources index=$field1$  host=$field2$ |table source |sort source</query>
+          <earliest>$earliest$</earliest>
+          <latest>$latest$</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">15</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">cell</option>
+        <option name="percentagesRow">false</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+        <drilldown>
+          <link target="_blank">search?q=index=$field1$  host="$field2$" source=$click.value$&amp;earliest=&amp;latest=</link>
+        </drilldown>
+      </table>
+    </panel>
+  </row>
+</form>

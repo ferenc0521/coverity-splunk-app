@@ -1,0 +1,394 @@
+<form>
+  <label>CIM-Configuration</label>
+  <fieldset submitButton="false">
+    <input type="dropdown" token="field2">
+      <label>index</label>
+      <choice value="none">--select Index</choice>
+      <fieldForLabel>index</fieldForLabel>
+      <fieldForValue>index</fieldForValue>
+      <search>
+        <query>| eventcount summarize=false index=* |regex index!="(main|history|jmx|summary)" | dedup index | fields index</query>
+        <earliest>0</earliest>
+        <latest></latest>
+      </search>
+      <default>none</default>
+      <initialValue>none</initialValue>
+    </input>
+    <input type="dropdown" token="field3">
+      <label>host</label>
+      <choice value="*">(all)</choice>
+      <fieldForLabel>host</fieldForLabel>
+      <fieldForValue>host</fieldForValue>
+      <search>
+        <query>| metadata type=hosts index=$field2$ |  table host |  sort host</query>
+        <earliest>0</earliest>
+        <latest></latest>
+      </search>
+      <default>*</default>
+    </input>
+  </fieldset>
+  <row depends="$no_show$">
+    <panel>
+      <html>
+         <style>
+           div[data-view="views/shared/appbar/Master"] {
+             background-color: #5A2A82;
+             }
+            div[data-role="underline"] {
+             background-color:red;
+            }
+         </style>
+       </html>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <table>
+        <title>host.info (at the moment when configs were saved)</title>
+        <search>
+          <query>index=$field2$ host="$field3$" source="*host.info" osName 
+| rename osName as os, processors as proc, cimDiskUsage.volume as disk.volume
+| eval memTotalGB='memory.total'/1024/1024/1024 | eval memUsedGB='memory.used'/1024/1024/1024 | eval memFreeGB='memory.free'/1024/1024/1024
+| eval diskTotalGB='cimDiskUsage.totalSpace'/1024/1024/1024 | eval diskFreeGB='cimDiskUsage.freeSpace'/1024/1024/1024 
+| table os,proc,memTotalGB,memUsedGB,memFreeGB, disk.volume,diskTotalGB,diskFreeGB</query>
+          <earliest>$earliest$</earliest>
+          <latest>$latest$</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">100</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+        <format type="number" field="memTotalGB">
+          <option name="unit">GB</option>
+        </format>
+        <format type="number" field="memUsedGB">
+          <option name="unit">GB</option>
+        </format>
+        <format type="number" field="memFreeGB">
+          <option name="unit">GB</option>
+        </format>
+        <format type="number" field="diskTotalGB">
+          <option name="unit">GB</option>
+        </format>
+        <format type="number" field="diskFreeGB">
+          <option name="unit">GB</option>
+        </format>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <single>
+        <title>version</title>
+        <search>
+          <query>index=$field2$ host=$field3$ source="*VERSION" "external version" |rex field=_raw "external version: (?&lt;ext_version&gt;.*)" |table ext_version</query>
+          <earliest>0</earliest>
+          <latest></latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="numberPrecision">0.00</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="useThousandSeparators">0</option>
+      </single>
+    </panel>
+    <panel>
+      <chart>
+        <title>memUsage (when configs were saved)</title>
+        <search>
+          <query>index=$field2$ host=$field3$ source="*host.info" osName 
+| eval memUsage=round('memory.used'/'memory.total'*100,1)
+| table memUsage</query>
+          <earliest>0</earliest>
+          <latest></latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
+        <option name="charting.axisTitleX.visibility">visible</option>
+        <option name="charting.axisTitleY.visibility">visible</option>
+        <option name="charting.axisTitleY2.visibility">visible</option>
+        <option name="charting.axisX.abbreviation">none</option>
+        <option name="charting.axisX.scale">linear</option>
+        <option name="charting.axisY.abbreviation">none</option>
+        <option name="charting.axisY.scale">linear</option>
+        <option name="charting.axisY2.abbreviation">none</option>
+        <option name="charting.axisY2.enabled">0</option>
+        <option name="charting.axisY2.scale">inherit</option>
+        <option name="charting.chart">radialGauge</option>
+        <option name="charting.chart.bubbleMaximumSize">50</option>
+        <option name="charting.chart.bubbleMinimumSize">10</option>
+        <option name="charting.chart.bubbleSizeBy">area</option>
+        <option name="charting.chart.nullValueMode">gaps</option>
+        <option name="charting.chart.rangeValues">[0,66,80,100]</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
+        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.chart.style">minimal</option>
+        <option name="charting.drilldown">all</option>
+        <option name="charting.gaugeColors">["0x84E900","0xFFE800","0xBF3030"]</option>
+        <option name="charting.layout.splitSeries">0</option>
+        <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
+        <option name="charting.legend.labelStyle.overflowMode">ellipsisMiddle</option>
+        <option name="charting.legend.mode">standard</option>
+        <option name="charting.legend.placement">right</option>
+        <option name="charting.lineWidth">2</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+      </chart>
+    </panel>
+    <panel>
+      <chart>
+        <title>diskUsage (when configs were saved)</title>
+        <search>
+          <query>index=$field2$ host=$field3$ source="*host.info" osName 
+| eval diskUsage=round('cimDiskUsage.freeSpace'/'cimDiskUsage.totalSpace'*100,1)
+| table diskUsage</query>
+          <earliest>0</earliest>
+          <latest></latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
+        <option name="charting.axisTitleX.visibility">visible</option>
+        <option name="charting.axisTitleY.visibility">visible</option>
+        <option name="charting.axisTitleY2.visibility">visible</option>
+        <option name="charting.axisX.abbreviation">none</option>
+        <option name="charting.axisX.scale">linear</option>
+        <option name="charting.axisY.abbreviation">none</option>
+        <option name="charting.axisY.scale">linear</option>
+        <option name="charting.axisY2.abbreviation">none</option>
+        <option name="charting.axisY2.enabled">0</option>
+        <option name="charting.axisY2.scale">inherit</option>
+        <option name="charting.chart">radialGauge</option>
+        <option name="charting.chart.bubbleMaximumSize">50</option>
+        <option name="charting.chart.bubbleMinimumSize">10</option>
+        <option name="charting.chart.bubbleSizeBy">area</option>
+        <option name="charting.chart.nullValueMode">gaps</option>
+        <option name="charting.chart.rangeValues">[0,60,80,100]</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
+        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.chart.style">minimal</option>
+        <option name="charting.drilldown">all</option>
+        <option name="charting.gaugeColors">["0x84E900","0xFFE800","0xBF3030"]</option>
+        <option name="charting.layout.splitSeries">0</option>
+        <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
+        <option name="charting.legend.labelStyle.overflowMode">ellipsisMiddle</option>
+        <option name="charting.legend.mode">standard</option>
+        <option name="charting.legend.placement">right</option>
+        <option name="charting.lineWidth">2</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+      </chart>
+    </panel>
+    <panel>
+      <single>
+        <title>postgres version</title>
+        <search>
+          <query>index=$field2$ host=$field3$ source="*VERSION" 
+| regex _raw=".*postgresVersion=.*" 
+| rex field=_raw ".*postgresVersion=(?&lt;postgresVersion&gt;\d+\.\d+\.\d+).*"|table postgresVersion</query>
+          <earliest>0</earliest>
+          <latest></latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x65a637","0x6db7c6","0xf7bc38","0xf58f39","0xd93f3c"]</option>
+        <option name="rangeValues">[0,30,70,100]</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="showSparkline">1</option>
+        <option name="showTrendIndicator">1</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="unitPosition">after</option>
+        <option name="useColors">0</option>
+        <option name="useThousandSeparators">1</option>
+      </single>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <table>
+        <title>JVM tuning params</title>
+        <search>
+          <query>source="*properties" index=$field2$ host=$field3$ 
+| regex _raw="^java_opts.*" 
+| rex field=_raw "^(?&lt;param&gt;[a-z,_]+)\s*=\s*(?&lt;value&gt;.*).*"|table _time,param,value |dedup param,value |sort param</query>
+          <earliest>0</earliest>
+          <latest></latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">50</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+      </table>
+    </panel>
+    <panel>
+      <table>
+        <title>JVM tuning recommendation based on memTotal</title>
+        <search>
+          <query>index=$field2$ host=$field3$ source="*host.info" osName |eval hdr = "value"
+| eval Xmx='memory.total'*0.6/1024/1024/1024 |eval java_opts_post="-server "+" -Xms=512m"+" -Xmx="+Xmx+"g" |eval java_opts_pre=""
+| table hdr, java_opts_pre,java_opts_post |transpose column_name=parameter, header_field=hdr</query>
+          <earliest>$earliest$</earliest>
+          <latest>$latest$</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">100</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <table>
+        <title>database tuning parameters</title>
+        <search>
+          <query>source="*postgresql.conf" index=$field2$ host=$field3$ 
+| regex _raw="^(autovacuum_max_workers|max_val_size|autovacuum_max_workers|effective_cache_size|shared_buffers|work_mem|maintenance_work_mem|effective_io_concurrency|random_page_cost).*" 
+| rex field=_raw "^(?&lt;param&gt;[a-z,_]+)\s*=\s*(?&lt;value&gt;[a-z,0-9,A-Z,\',\-,_/]+).*" 
+| table _time,param,value |dedup param,value |sort param</query>
+          <earliest>0</earliest>
+          <latest></latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">8</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+      </table>
+    </panel>
+    <panel>
+      <table>
+        <title>database tuning recommendation based on memTotal</title>
+        <search>
+          <query>index=$field2$ host=$field3$ source="*host.info" osName |eval hdr="value"
+| eval memPostgres='memory.total'*0.4/1024/1024 
+| eval shared_buffers=printf("%dMB",memPostgres/4)
+| eval work_mem=printf("%dMB",memPostgres/4/32) 
+| eval maintenance_work_mem=printf("%dMB",max(memPostgres/4/4,256)) 
+| eval max_wal_size=printf("%dGB",6)
+| eval effective_cache_size=printf("%dGB",max(memPostgres/1024*0.75,4))
+| eval autovacuum_max_workers = 5 
+| table hdr, shared_buffers, work_mem, maintenance_work_mem, max_wal_size,effective_cache_size, autovacuum_max_workers|transpose column_name=parameter header_field=hdr |sort parameter</query>
+          <earliest>0</earliest>
+          <latest></latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">100</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+        <format type="number" field="shared_buffers">
+          <option name="precision">0</option>
+          <option name="unit">MB</option>
+        </format>
+        <format type="number" field="Xmx">
+          <option name="precision">0</option>
+          <option name="unit">GB</option>
+        </format>
+        <format type="number" field="work_mem">
+          <option name="precision">0</option>
+          <option name="unit">MB</option>
+        </format>
+        <format type="number" field="max_val_size">
+          <option name="precision">0</option>
+          <option name="unit">GB</option>
+        </format>
+        <format type="number" field="effective_cache_size">
+          <option name="precision">0</option>
+          <option name="unit">GB</option>
+        </format>
+        <format type="number" field="autovacuum_max_workers">
+          <option name="precision">0</option>
+        </format>
+        <format type="number" field="maintenance_work_mem">
+          <option name="precision">0</option>
+          <option name="unit">MB</option>
+        </format>
+        <format type="number" field="value">
+          <option name="precision">0</option>
+        </format>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <table>
+        <title>all properties</title>
+        <search>
+          <query>source="*properties" index=$field2$ host=$field3$ 
+| regex _raw="^[a-z].*" 
+| rex field=_raw "^(?&lt;param&gt;[a-z,A-Z,\.,_]+)=(?&lt;value&gt;.*)"|table _time,param,value |dedup param,value |sort param</query>
+          <earliest>0</earliest>
+          <latest></latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">100</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+      </table>
+    </panel>
+    <panel>
+      <table>
+        <title>all database parameters</title>
+        <search>
+          <query>source="*postgresql.conf" index=$field2$ host=$field3$ 
+| regex _raw="^[a-z].*" 
+| rex field=_raw "^(?&lt;param&gt;[a-z,_]+)\s*=\s*(?&lt;value&gt;[a-z,0-9,A-Z,\',\-,_/]+).*"|table _time,param,value |dedup param,value |sort param</query>
+          <earliest>0</earliest>
+          <latest></latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">100</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+      </table>
+    </panel>
+  </row>
+</form>

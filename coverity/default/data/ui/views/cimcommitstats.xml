@@ -1,0 +1,735 @@
+<form>
+  <label>CIM-Commit-Stats (cim.log)</label>
+  <fieldset submitButton="false" autoRun="false">
+    <input type="dropdown" token="field2">
+      <label>index</label>
+      <choice value="--select index">--select index</choice>
+      <fieldForLabel>index</fieldForLabel>
+      <fieldForValue>index</fieldForValue>
+      <search>
+        <query>| eventcount summarize=false index=* |regex index!="(main|history|jmx|summary)" | dedup index | fields index</query>
+        <earliest>0</earliest>
+        <latest></latest>
+      </search>
+      <initialValue>--select index</initialValue>
+    </input>
+    <input type="dropdown" token="field3">
+      <label>host</label>
+      <choice value="*">(all)</choice>
+      <fieldForLabel>host</fieldForLabel>
+      <fieldForValue>host</fieldForValue>
+      <search>
+        <query>| metadata type=hosts index=$field2$ |  table host |  sort host</query>
+        <earliest>0</earliest>
+        <latest></latest>
+      </search>
+      <default>*</default>
+    </input>
+    <input type="time" token="field1">
+      <label>Time Picker</label>
+      <default>
+        <earliest>-30d@d</earliest>
+        <latest>now</latest>
+      </default>
+    </input>
+  </fieldset>
+  <row depends="$no_show$">
+    <panel>
+      <html>
+         <style>
+           div[data-view="views/shared/appbar/Master"] {
+             background-color: #5A2A82;
+             }
+            div[data-role="underline"] {
+             background-color:red;
+            }
+         </style>
+       </html>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <single>
+        <title>Preview Requests</title>
+        <search>
+          <query>index=$field2$ host=$field3$     source="*cim.log*" stream=* | rex field=_raw ".* - Received control message: REQUESTING (?&lt;commit_type&gt;[^?]+).*"  | search commit_type=preview*   |stats count</query>
+          <earliest>$field1.earliest$</earliest>
+          <latest>$field1.latest$</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <title>Commit Requests</title>
+        <search>
+          <query>index=$field2$ host=$field3$    source="*cim.log*" stream=* NOT pushed NOT adding NOT DEBUG received control message requesting | rex field=_raw ".* - Received control message: REQUESTING (?&lt;commit_type&gt;[^?]+).*"  | search NOT commit_type=preview*   |stats count</query>
+          <earliest>$field1.earliest$</earliest>
+          <latest>$field1.latest$</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <title>Status OK</title>
+        <search>
+          <query>index=$field2$ host=$field3$   source="*cim.log*" method="streamLock-9-th-*" NOT class IN (TriageContextPersisterExecutor, DefectMessageProcessorImpl,"Methodexecutionadvice" AbstractReadWriteEhcacheAccessStrategy FunctionMessageProcessorImpl, AbstractBatchImpl,SendDefectsV3,SendAnalysisSummariesContentsV1)
+| rex field=message "Starting main commit job\. (?&lt;user&gt;\w+) committing to stream (?&lt;stream&gt;\w+).*" 
+| rex field=method "streamLock-9-th-(?&lt;thread&gt;\d+)" 
+| transaction thread , startswith="Starting main commit job", endswith="Ending commit job after",keepevicted=true |search status=OK
+| stats count</query>
+          <earliest>$field1.earliest$</earliest>
+          <latest>$field1.latest$</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <title>Status ABORT</title>
+        <search>
+          <query>index=$field2$ host=$field3$   source="*cim.log*" method="streamLock-9-th-*" NOT class IN (TriageContextPersisterExecutor, DefectMessageProcessorImpl,"Methodexecutionadvice" AbstractReadWriteEhcacheAccessStrategy FunctionMessageProcessorImpl, AbstractBatchImpl,SendDefectsV3,SendAnalysisSummariesContentsV1)
+| rex field=message "Starting main commit job\. (?&lt;user&gt;\w+) committing to stream (?&lt;stream&gt;\w+).*" 
+| rex field=method "streamLock-9-th-(?&lt;thread&gt;\d+)" 
+| transaction thread , startswith="Starting main commit job", endswith="Ending commit job after",keepevicted=true |search status=ABORT
+| stats count</query>
+          <earliest>$field1.earliest$</earliest>
+          <latest>$field1.latest$</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <title>No Status Sent</title>
+        <search>
+          <query>index=$field2$ host=$field3$   source="*cim.log*" method="streamLock-9-th-*" NOT MethodExecutionAdvice 
+| rex field=message "Starting main commit job\. (?&lt;user&gt;\w+) committing to stream (?&lt;stream&gt;\w+).*" 
+| rex field=method "streamLock-9-th-(?&lt;thread&gt;\d+)" 
+| transaction thread , startswith=startswith="Starting main commit job", endswith="Ending commit job after" |search NOT (status=OK OR status=ABORT)
+| stats count</query>
+          <earliest>$field1.earliest$</earliest>
+          <latest>$field1.latest$</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <title>Max commit  threads used</title>
+        <search>
+          <query>index=$field2$ host=$field3$  source="*cim.log*" method="streamLock-9-th-*" 
+| rex field=method "streamLock-9-th-(?&lt;thread&gt;\d+)" 
+| stats max(thread)</query>
+          <earliest>$field1.earliest$</earliest>
+          <latest>$field1.latest$</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <title>Max listener threads used</title>
+        <search>
+          <query>index=$field2$ host=$field3$  source="*cim.log*" "listener-1-th-*"| rex field=method "listener-1-th-(?&lt;thread&gt;\d+)" 
+| stats max(thread)</query>
+          <earliest>$field1.earliest$</earliest>
+          <latest>$field1.latest$</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x53a051", "0x0877a6", "0xf8be34", "0xf1813f", "0xdc4e41"]</option>
+        <option name="rangeValues">[0,30,70,100]</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="showSparkline">1</option>
+        <option name="showTrendIndicator">1</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="unitPosition">after</option>
+        <option name="useColors">0</option>
+        <option name="useThousandSeparators">1</option>
+      </single>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <table>
+        <title>version info</title>
+        <search>
+          <query>index=$field2$ host=$field3$  source="*cim.log*" (external OR internal) version: NOT pushed NOT adding NOT DEBUG| eval versions=message |table versions |head 4</query>
+          <earliest>$field1.earliest$</earliest>
+          <latest>$field1.latest$</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">100</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+      </table>
+    </panel>
+    <panel>
+      <table>
+        <title>main commit jobs by stream</title>
+        <search>
+          <query>index=$field2$ host=$field3$  source="*cim.log*" | rex field=_raw "(?&lt;utc_time_stamp&gt;\d{4}-\d\d-\d\d \d\d:\d\d:\d\d\.\d{3}utc)\s+(?&lt;level&gt;[A-Z]+)\s+(?&lt;class&gt;[^,]+),(?&lt;method&gt;[^:]+):(?&lt;lineno&gt;\d+)(?&lt;jmessage&gt;.*)" 
+| rex field=jmessage "(?&lt;junkie&gt; \{[^\}]*\}| )- (?&lt;message&gt;.*)" 
+| search method="streamLock-9-th-*" NOT class IN (TriageContextPersisterExecutor, DefectMessageProcessorImpl,"Methodexecutionadvice" AbstractReadWriteEhcacheAccessStrategy FunctionMessageProcessorImpl, AbstractBatchImpl,SendDefectsV3,SendAnalysisSummariesContentsV1) 
+| rex field=message "Starting main commit job\. (?&lt;user&gt;[^ ]+) committing to stream (?&lt;stream&gt;.*)" 
+| rex field=method "streamLock-9-th-(?&lt;thread&gt;\d+)" 
+| transaction thread , startswith="Starting main commit job", endswith="Ending commit job after",keepevicted=true |search status=OK OR status=ABORT |table _time,user,stream,duration|stats count, sum(duration) as sum, avg(duration) as avg min(duration) as min, max(duration) as max by stream |sort -sum</query>
+          <earliest>$field1.earliest$</earliest>
+          <latest>$field1.latest$</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">10</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+        <format type="number" field="sum">
+          <option name="precision">0</option>
+        </format>
+        <format type="number" field="count">
+          <option name="precision">0</option>
+        </format>
+        <format type="number" field="avg">
+          <option name="precision">0</option>
+          <option name="unit">sec</option>
+        </format>
+        <format type="number" field="avg_sec">
+          <option name="precision">0</option>
+        </format>
+        <format type="number" field="sum_sec">
+          <option name="precision">0</option>
+        </format>
+      </table>
+    </panel>
+    <panel>
+      <chart>
+        <title>duration sum by stream</title>
+        <search>
+          <query>index=$field2$ host=$field3$  source="*cim.log*" | rex field=_raw "(?&lt;utc_time_stamp&gt;\d{4}-\d\d-\d\d \d\d:\d\d:\d\d\.\d{3}utc)\s+(?&lt;level&gt;[A-Z]+)\s+(?&lt;class&gt;[^,]+),(?&lt;method&gt;[^:]+):(?&lt;lineno&gt;\d+)(?&lt;jmessage&gt;.*)" 
+| rex field=jmessage "(?&lt;junkie&gt; \{[^\}]*\}| )- (?&lt;message&gt;.*)" 
+| search method="streamLock-9-th-*" NOT class IN (TriageContextPersisterExecutor, DefectMessageProcessorImpl,"Methodexecutionadvice" AbstractReadWriteEhcacheAccessStrategy FunctionMessageProcessorImpl, AbstractBatchImpl,SendDefectsV3,SendAnalysisSummariesContentsV1) 
+| rex field=message "Starting main commit job\. (?&lt;user&gt;[^ ]+) committing to stream (?&lt;stream&gt;[^ ]+).*" 
+| rex field=method "streamLock-9-th-(?&lt;thread&gt;\d+)" 
+| transaction thread , startswith="Starting main commit job", endswith="Ending commit job after",keepevicted=true |search status=OK OR status=ABORTT |table _time,user,stream,duration|stats sum(duration) as sum, avg(duration) as avg by stream |sort -sum</query>
+          <earliest>$field1.earliest$</earliest>
+          <latest>$field1.latest$</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
+        <option name="charting.axisTitleX.visibility">visible</option>
+        <option name="charting.axisTitleY.visibility">visible</option>
+        <option name="charting.axisTitleY2.visibility">visible</option>
+        <option name="charting.axisX.abbreviation">none</option>
+        <option name="charting.axisX.scale">linear</option>
+        <option name="charting.axisY.abbreviation">none</option>
+        <option name="charting.axisY.scale">linear</option>
+        <option name="charting.axisY2.abbreviation">none</option>
+        <option name="charting.axisY2.enabled">0</option>
+        <option name="charting.axisY2.scale">inherit</option>
+        <option name="charting.chart">pie</option>
+        <option name="charting.chart.bubbleMaximumSize">50</option>
+        <option name="charting.chart.bubbleMinimumSize">10</option>
+        <option name="charting.chart.bubbleSizeBy">area</option>
+        <option name="charting.chart.nullValueMode">gaps</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.sliceCollapsingThreshold">0.0025</option>
+        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.chart.style">shiny</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.layout.splitSeries">0</option>
+        <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
+        <option name="charting.legend.labelStyle.overflowMode">ellipsisMiddle</option>
+        <option name="charting.legend.mode">standard</option>
+        <option name="charting.legend.placement">right</option>
+        <option name="charting.lineWidth">2</option>
+        <option name="height">394</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <table>
+        <title>ssl handshake errors</title>
+        <search>
+          <query>index=$field2$ host=$field3$  SSLHandshakeException | rex field=method "listener-1-th-(?&lt;listener&gt;[\d+]).*" 
+| rex field=sslSocket "Socket\[addr=(?&lt;remote_host&gt;[^/]+)/(?&lt;remote_ip&gt;[^,]+).*" 
+| rex field=message "SSLHandshakeException,.*\njavax.net.ssl.SSLHandshakeException: Received fatal alert: (?&lt;fatal_alert&gt;[^\s]+).*" 
+| table _time,listener,sslSocket,remote_host,remote_ip,fatal_alert</query>
+          <earliest>-30d@d</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">15</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <table>
+        <title>listener commit requests</title>
+        <search>
+          <query>index=$field2$ host=$field3$   source="*cim.log*" ("Received control message: REQUESTING" OR "running connection handler" ) NOT solicit_ssl* |  rex field=method "listener-1-th-(?&lt;listener&gt;[\d+]).*" | rex field=_raw ".* - Received control message: REQUESTING (?&lt;commit_type&gt;[^?]+).*"  | rex field=message "Running connection handler for client socket Socket\[addr=\/(?&lt;ip&gt;\d+.\d+\.\d+\.\d+),port=(?&lt;port&gt;\d+).*" |transaction listener,startswith="Running connection handler" endswith="Received control message: REQUESTING"|table _time,listener,commit_type,ip,port,localport,stream,comparisonSnapshotId,clientVersion</query>
+          <earliest>$field1.earliest$</earliest>
+          <latest>$field1.latest$</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">15</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <table>
+        <title>commit requests</title>
+        <search>
+          <query>index=$field2$ host=$field3$  source="*cim.log*" stream="*" NOT pushed NOT adding NOT DEBUG | rex field=_raw ".* - Received control message: REQUESTING (?&lt;commit_type&gt;[^?]+).*"   | table _time,commit_type,stream,comparisonSnapshotId,clientVersion</query>
+          <earliest>$field1.earliest$</earliest>
+          <latest>$field1.latest$</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">15</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+      </table>
+    </panel>
+    <panel>
+      <table>
+        <title>primary queue wait_ms</title>
+        <search>
+          <query>index=$field2$ host=$field3$  source="*cim.log*" "Off of the primary queue after" 
+| rex field=method "streamLock-9-th-(?&lt;thread&gt;[\d+])" 
+| rex field=_raw "^.*Off of the primary queue after (?&lt;wait_ms&gt;\d+)ms.*" 
+| eval wait_sec= dur_ms/1000 
+| table _time,thread, wait_ms</query>
+          <earliest>$field1.earliest$</earliest>
+          <latest>$field1.latest$</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">15</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+        <format type="number" field="wait_ms">
+          <option name="precision">0</option>
+        </format>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <table>
+        <title>starting main commit jobs</title>
+        <search>
+          <query>index=$field2$ host=$field3$   source="*cim.log*" starting main commit |  rex field=method "streamLock-9-th-(?&lt;thread&gt;[\d+])" 
+|rex field=message "Starting main commit job. (?&lt;user&gt;[^ ]+) committing to stream (?&lt;stream&gt;.*)" |table _time,thread,stream,user</query>
+          <earliest>$field1.earliest$</earliest>
+          <latest>$field1.latest$</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">15</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+      </table>
+    </panel>
+    <panel>
+      <table>
+        <title>commit finishes</title>
+        <search>
+          <query>index=$field2$ host=$field3$  source="*cim.log*" ending commit 
+| rex field=method "streamLock-9-th-(?&lt;thread&gt;[\d+])" 
+| rex field=message "Ending commit job after (?&lt;exec_ms&gt;[\d]+)ms.*" 
+| rex field=message "Ending main commit job. User (?&lt;user&gt;[^,]+), stream (?&lt;stream&gt;.*)" 
+| transaction thread, startswith="Ending main commit job", endswith="Ending commit job after" 
+| table _time,thread,stream,user,exec_ms</query>
+          <earliest>$field1.earliest$</earliest>
+          <latest>$field1.latest$</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">15</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+        <format type="number" field="exec_ms">
+          <option name="precision">0</option>
+        </format>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <table>
+        <title>pushed to secondary queue</title>
+        <search>
+          <query>index=$field2$ host=$field3$   source="*cim.log*"  pushed| rex field=message "Pushed job CommitJob\{request=ControlMessage\{REQUESTING (?&lt;commit_type&gt;[^?]+)\?clientVersion=(?&lt;client_version&gt;COVERITY \([\d]+\))&amp;stream=(?&lt;stream&gt;[^&amp;]+)&amp;askForAllFiles=false}} to secondary queue for (?&lt;stream_id&gt;[\d]+).*"   | table _time,commit_type,client_version,stream,stream_id</query>
+          <earliest>$field1.earliest$</earliest>
+          <latest>$field1.latest$</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">15</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+      </table>
+    </panel>
+    <panel>
+      <table>
+        <title>stream unlocks</title>
+        <search>
+          <query>index=$field2$ host=$field3$   source="*cim.log*" Unlocked stream|rex field=method "streamLock-9-th-(?&lt;thread&gt;[\d+])"|rex field=message "Unlocked stream (?&lt;stream_id&gt;[\d]+) previously locked by StreamLockingRunnable{streamId=(?&lt;stream_idx&gt;[\d]+), job=(?&lt;job&gt;[^}]+)}"   | table _time,thread,stream_id,stream_idx, job</query>
+          <earliest>$field1.earliest$</earliest>
+          <latest>$field1.latest$</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">15</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <table>
+        <title>waiting for off of secondary queue</title>
+        <search>
+          <query>index=$field2$ host=$field3$  source="*cim.log*" secondary queue ("Pushed job" OR "Pulling job") 
+| rex field=message "(?&lt;pushpull&gt;Pushed|Pulling) job (?&lt;job&gt;com.coverity.ces.listener.commit.rcp2action.PreviewCommitImpl\$$1\@[a-f0-9]+|CommitJob[^\}]+\}\}) (from|to) secondary queue for (stream |)(?&lt;streamid&gt;\d+)" 
+| rex field=job "com.*action\.(?&lt;preview&gt;PreviewCommit).*" 
+| rex field=job "(?&lt;commit&gt;CommitJob).*" 
+| transaction streamid startswith="Pushed job" endswith="Pulling job"| table _time,duration,streamid,preview,commit,stream</query>
+          <earliest>$field1.earliest$</earliest>
+          <latest>$field1.latest$</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">10</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+        <format type="number" field="duration">
+          <option name="precision">0</option>
+        </format>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <table>
+        <title>basic commit requests by stream</title>
+        <search>
+          <query>index=$field2$ host=$field3$  source="*cim.log*" stream="*" NOT pushed NOT adding NOT DEBUG | rex field=_raw ".* - Received control message: REQUESTING (?&lt;commit_type&gt;[^?]+).*"  | search commit_type=basic*  | table _time,stream,commit_type,clientVersion,askForAllFiles |stats count by stream |sort - count</query>
+          <earliest>$field1.earliest$</earliest>
+          <latest>$field1.latest$</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">20</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+      </table>
+    </panel>
+    <panel>
+      <chart>
+        <title>basic commit requests by stream</title>
+        <search>
+          <query>index=$field2$ host=$field3$  source="*cim.log*" stream="*" NOT pushed NOT adding NOT DEBUG | rex field=_raw ".* - Received control message: REQUESTING (?&lt;commit_type&gt;[^?]+).*"  | search commit_type=basic*  | table _time,stream,commit_type,clientVersion,askForAllFiles |stats count by stream |sort -count, stream</query>
+          <earliest>$field1.earliest$</earliest>
+          <latest>$field1.latest$</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
+        <option name="charting.axisTitleX.visibility">visible</option>
+        <option name="charting.axisTitleY.visibility">visible</option>
+        <option name="charting.axisTitleY2.visibility">visible</option>
+        <option name="charting.axisX.abbreviation">none</option>
+        <option name="charting.axisX.scale">linear</option>
+        <option name="charting.axisY.abbreviation">none</option>
+        <option name="charting.axisY.scale">linear</option>
+        <option name="charting.axisY2.abbreviation">none</option>
+        <option name="charting.axisY2.enabled">0</option>
+        <option name="charting.axisY2.scale">inherit</option>
+        <option name="charting.chart">pie</option>
+        <option name="charting.chart.bubbleMaximumSize">50</option>
+        <option name="charting.chart.bubbleMinimumSize">10</option>
+        <option name="charting.chart.bubbleSizeBy">area</option>
+        <option name="charting.chart.nullValueMode">gaps</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.sliceCollapsingThreshold">0.001</option>
+        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.chart.style">minimal</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.layout.splitSeries">0</option>
+        <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
+        <option name="charting.legend.labelStyle.overflowMode">ellipsisMiddle</option>
+        <option name="charting.legend.mode">standard</option>
+        <option name="charting.legend.placement">right</option>
+        <option name="charting.lineWidth">2</option>
+        <option name="height">568</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <table>
+        <title>main commit details</title>
+        <search>
+          <query>index=$field2$ host=$field3$  source="*cim.log*"  NOT DEBUG ("Beginning commit job after" OR "Ending commit job after" OR "Ending main commit job" OR  "Sending terminator ActionTerminator" OR "starting" OR sending OR "receiving" OR "received" OR beginning) linecount=1 | rex field=_raw "(?&lt;utc_time_stamp&gt;\d{4}-\d\d-\d\d \d\d:\d\d:\d\d\.\d{3}utc)\s+(?&lt;level&gt;[A-Z]+)\s+(?&lt;class&gt;[^,]+),(?&lt;method&gt;[^:]+):(?&lt;lineno&gt;\d+)(?&lt;jmessage&gt;.*)" 
+| rex field=jmessage "(?&lt;junkie&gt; \{[^\}]*\}| )- (?&lt;message&gt;.*)" 
+| search method="streamLock-9-th-*" NOT class IN (TriageContextPersisterExecutor, DefectMessageProcessorImpl,"Methodexecutionadvice" AbstractReadWriteEhcacheAccessStrategy FunctionMessageProcessorImpl, AbstractBatchImpl,SendDefectsV3,SendAnalysisSummariesContentsV1) 
+| rex field=message "Starting main commit job\. (?&lt;user&gt;\w+) committing to stream (?&lt;stream&gt;[_a-zA-Z0-9\-\.]+).*" 
+| rex field=message "Beginning commit job after\s+(?&lt;wait_ms&gt;\d+).*" 
+| rex field=message "Receiving xrefs for (?&lt;xref_files&gt;\d+).*" 
+| rex field=message "Starting to scan (?&lt;scanned_defects&gt;\d+) defects to store its data.*" 
+| rex field=message "Sending hashes for (?&lt;sent_as_hashes&gt;\d+) analysis summaries.*" 
+| rex field=message "Receiving (?&lt;received_analysis_summaries&gt;\d+) analysis summaries.*" 
+| rex field=message "Ending commit job after\s+(?&lt;execution_ms&gt;\d+)ms.*" 
+| rex field=method "streamLock-9-th-(?&lt;thread&gt;\d+)" 
+| transaction thread , startswith="Starting main commit job", endswith="Ending commit job after",keepevicted=true 
+| search stream=* 
+| table _time, stream, thread,user, duration, wait_ms, execution_ms, xref_files, scanned_defects, sent_as_hashes, received_analysis_summaries</query>
+          <earliest>$field1.earliest$</earliest>
+          <latest>$field1.latest$</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">15</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Begin, end commit jobs, unlock streams</title>
+      <table>
+        <search>
+          <query>index=$field2$ host=$field3$ source="*cim.log*" ("Ending main commit job" OR "Starting main commit job" OR "Ending commit job after" OR "Beginning commit job after" OR "Unlocked stream") 
+| rex field=_raw "(?&lt;utc_time_stamp&gt;\d{4}-\d\d-\d\d \d\d:\d\d:\d\d\.\d{3}utc)\s+(?&lt;level&gt;[A-Z]+)\s+(?&lt;class&gt;[^,]+),(?&lt;method&gt;[^:]+):(?&lt;lineno&gt;\d+)(?&lt;jmessage&gt;.*)" 
+| rex field=jmessage "(?&lt;junkie&gt; \{[^\}]*\}| )- (?&lt;message&gt;.*)" 
+| rex field=method "streamLock-9-th-(?&lt;thread&gt;[\d+])" 
+| sort thread, _time 
+| rex field=message "(?&lt;evt&gt;Beginning commit job after|Ending commit job after|Starting main commit job|Ending main commit job|Unlocked stream)" 
+| eval evtn=case(evt="Beginning commit job after", 1,evt="Ending commit job after", 0, evt="Starting main commit job", 2,evt="Ending main commit job", 3,evt="Unlocked stream", 4) 
+| rex field=message "(?&lt;evt1&gt;Beginning|Ending) commit job after (?&lt;exec_ms&gt;[\d]+)ms\. (?&lt;ms_of&gt;waiting|of execution)" 
+| rex field=message "Unlocked stream (?&lt;stream_id&gt;[\d]+) previously locked by" 
+| convert rmunit(exec_ms) as numexec 
+| eval w_e_s_u=(_time-(numexec/1000)) 
+| eval wait_or_exec_since=strftime(w_e_s_u ,"%F %T.%Q") 
+| eval unix_time=_time 
+| delta evtn as evt_delta 
+| delta unix_time as time_delta_ms 
+| eval prev_unix_time=unix_time - time_delta_ms 
+| table _time,utc_time_stamp,thread, evt_delta, message,prev_unix_time, unix_time,wait_or_exec_since,w_e_s_u, time_delta_ms,  stream, user,streamId, job</query>
+          <earliest>$field1.earliest$</earliest>
+          <latest>$field1.latest$</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">20</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Begin end nesting anomalies</title>
+      <table>
+        <search>
+          <query>index=$field2$ host=$field3$ source="*cim.log*" ("Ending main commit job" OR "Starting main commit job" OR "Ending commit job after" OR "Beginning commit job after" OR "Unlocked stream") 
+| rex field=_raw "(?&lt;utc_time_stamp&gt;\d{4}-\d\d-\d\d \d\d:\d\d:\d\d\.\d{3}utc)\s+(?&lt;level&gt;[A-Z]+)\s+(?&lt;class&gt;[^,]+),(?&lt;method&gt;[^:]+):(?&lt;lineno&gt;\d+)(?&lt;jmessage&gt;.*)" 
+| rex field=jmessage "(?&lt;junkie&gt; \{[^\}]*\}| )- (?&lt;message&gt;.*)" 
+| rex field=method "streamLock-9-th-(?&lt;thread&gt;[\d+])" 
+| sort thread, _time 
+| rex field=message "(?&lt;evt&gt;Beginning commit job after|Ending commit job after|Starting main commit job|Ending main commit job|Unlocked stream)" 
+| eval evtn=case(evt="Beginning commit job after", 1,evt="Ending commit job after", 0, evt="Starting main commit job", 2,evt="Ending main commit job", 3,evt="Unlocked stream", 4) 
+| rex field=message "(?&lt;evt1&gt;Beginning|Ending) commit job after (?&lt;exec_ms&gt;[\d]+)ms\. (?&lt;ms_of&gt;waiting|of execution)" 
+| rex field=message "Unlocked stream (?&lt;stream_id&gt;[\d]+) previously locked by" 
+| convert rmunit(exec_ms) as numexec 
+| eval w_e_s_u=(_time-(numexec/1000)) 
+| eval wait_or_exec_since=strftime(w_e_s_u ,"%F %T.%Q") 
+| eval unix_time=_time 
+| delta evtn as evt_delta 
+| delta unix_time as time_delta_ms 
+| eval prev_unix_time=unix_time - time_delta_ms 
+| table _time,utc_time_stamp,thread, evt_delta, message,prev_unix_time, unix_time,wait_or_exec_since,w_e_s_u, time_delta_ms,  stream, user,streamId, job |search (evt_delta=0 OR (NOT evt_delta = -1 AND message=Ending*))</query>
+          <earliest>$field1.earliest$</earliest>
+          <latest>$field1.latest$</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">20</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <table>
+        <title>stream lock acquisition failure</title>
+        <search>
+          <query>index=$field2$ host=$field3$    source="*cim.log*" Unable lock* | rex field=_raw "(?&lt;utc_time_stamp&gt;\d{4}-\d\d-\d\d \d\d:\d\d:\d\d\.\d{3}utc)\s+(?&lt;level&gt;[A-Z]+)\s+(?&lt;class&gt;[^,]+),(?&lt;method&gt;[^:]+):(?&lt;lineno&gt;\d+)(?&lt;jmessage&gt;.*)" 
+| rex field=jmessage "(?&lt;junkie&gt; \{[^\}]*\}| )- (?&lt;message&gt;.*)" 
+| search method="streamLock-9-th-*" NOT class IN (TriageContextPersisterExecutor, DefectMessageProcessorImpl,"Methodexecutionadvice" AbstractReadWriteEhcacheAccessStrategy FunctionMessageProcessorImpl, AbstractBatchImpl,SendDefectsV3,SendAnalysisSummariesContentsV1) | rex field=method "scheduler_Worker-(?&lt;worker&gt;[\d+])" 
+| rex field=message "Unable to purge details for stream (?&lt;stream_id&gt;\d+) after (?&lt;attempt&gt;\d+).*"| rex field=message "Unable to acquire lock for stream (?&lt;stream&gt;.*)"|table _time,stream,stream_id,attempt</query>
+          <earliest>$field1.earliest$</earliest>
+          <latest>$field1.latest$</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">15</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <chart>
+        <title>Messages per minute by thread (streamlock-9)</title>
+        <search>
+          <query>index=$field2$ host=$field3$   source=*/cim.log* streamLock NOT debug NOT pushed NOT primary| rex field=_raw "(?&lt;utc_time_stamp&gt;\d{4}-\d\d-\d\d \d\d:\d\d:\d\d\.\d{3}utc)\s+(?&lt;level&gt;[A-Z]+)\s+(?&lt;class&gt;[^,]+),(?&lt;method&gt;[^:]+):(?&lt;lineno&gt;\d+)(?&lt;jmessage&gt;.*)" 
+| rex field=jmessage "(?&lt;junkie&gt; \{[^\}]*\}| )- (?&lt;message&gt;.*)" 
+| search method="streamLock-9-th-*" NOT class IN (TriageContextPersisterExecutor, DefectMessageProcessorImpl,"Methodexecutionadvice" AbstractReadWriteEhcacheAccessStrategy FunctionMessageProcessorImpl, AbstractBatchImpl,SendDefectsV3,SendAnalysisSummariesContentsV1) |rex field=method "streamLock-9-th-(?&lt;thread&gt;\d+)" | fields + _time,thread |timechart span=1m count BY thread WHERE max in top50 |sort by thread</query>
+          <earliest>$field1.earliest$</earliest>
+          <latest>$field1.latest$</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
+        <option name="charting.axisTitleX.visibility">visible</option>
+        <option name="charting.axisTitleY.visibility">visible</option>
+        <option name="charting.axisTitleY2.visibility">visible</option>
+        <option name="charting.axisX.abbreviation">none</option>
+        <option name="charting.axisX.scale">linear</option>
+        <option name="charting.axisY.abbreviation">none</option>
+        <option name="charting.axisY.scale">log</option>
+        <option name="charting.axisY2.abbreviation">none</option>
+        <option name="charting.axisY2.enabled">0</option>
+        <option name="charting.axisY2.scale">inherit</option>
+        <option name="charting.chart">column</option>
+        <option name="charting.chart.bubbleMaximumSize">50</option>
+        <option name="charting.chart.bubbleMinimumSize">10</option>
+        <option name="charting.chart.bubbleSizeBy">area</option>
+        <option name="charting.chart.nullValueMode">gaps</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
+        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.chart.style">shiny</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.layout.splitSeries">0</option>
+        <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
+        <option name="charting.legend.labelStyle.overflowMode">ellipsisMiddle</option>
+        <option name="charting.legend.mode">standard</option>
+        <option name="charting.legend.placement">right</option>
+        <option name="charting.lineWidth">2</option>
+        <option name="height">447</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+      </chart>
+    </panel>
+  </row>
+</form>
