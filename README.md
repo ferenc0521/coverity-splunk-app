@@ -6,7 +6,7 @@
   * Install app from file: coverity.tgz
   * No source necessary
   * Preserving changes you made (this is how I do it, smarter people should do smarter suggestions welcome)
-      * splunk package app coverity
+      * From the splunk directory `bin/splunk package app coverity`
       * copy the coverity.spl out, expand with tar, copy the changes to your local repo
   
   
